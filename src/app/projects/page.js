@@ -10,6 +10,8 @@ export default function ProjectLibrary() {
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
+  // NEW DESCRIPTION STATE FOR MODAL
+  const [newProjectDescription, setNewProjectDescription] = useState("");
 
   const api = useMemo(() => {
     const instance = axios.create({ baseURL: "http://127.0.0.1:54321" });
@@ -24,25 +26,21 @@ export default function ProjectLibrary() {
   const fetchProjects = async () => {
     setLoading(true);
     try {
-      // 1. Fetch all projects
       const response = await api.get("/projects/");
       const projectsData = response.data;
 
-      // 2. Enrich projects with their individual average sentiment scores
       const enrichedProjects = await Promise.all(
         projectsData.map(async (project) => {
           try {
             const res = await api.get(`/sentiment-analysis_results/${project.id}`);
             const results = res.data;
             
-            // Calculate average if results exist
             const avg = results.length > 0 
               ? results.reduce((acc, curr) => acc + curr.avg_sentiment, 0) / results.length 
               : null;
 
             return { ...project, globalScore: avg };
           } catch (err) {
-            // If fetching results fails, return project with null score
             return { ...project, globalScore: null };
           }
         })
@@ -64,8 +62,13 @@ export default function ProjectLibrary() {
     e.preventDefault();
     if (!newProjectName.trim()) return;
     try {
-      await api.post("/projects/", { name: newProjectName });
+      // UPDATED TO SEND DESCRIPTION
+      await api.post("/projects/", { 
+        name: newProjectName,
+        description: newProjectDescription 
+      });
       setNewProjectName("");
+      setNewProjectDescription(""); // RESET
       setIsModalOpen(false);
       fetchProjects();
     } catch (err) {
@@ -111,7 +114,6 @@ export default function ProjectLibrary() {
                   <div className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center text-lg">📁</div>
                   
                   <div className="flex items-center gap-4">
-                    {/* Global Score Display with Safety Check */}
                     {project.globalScore !== null && project.globalScore !== undefined && (
                       <div className="flex flex-col items-end">
                         <span className="text-[8px] font-black uppercase tracking-tighter text-gray-500">Global Score</span>
@@ -130,9 +132,13 @@ export default function ProjectLibrary() {
                   </div>
                 </div>
 
-                <h3 className="text-lg font-bold text-white mb-6 group-hover:text-white transition-colors">{project.name}</h3>
+                <h3 className="text-lg font-bold text-white mb-2 group-hover:text-white transition-colors">{project.name}</h3>
+                
+                {/* NEW PROJECT DESCRIPTION LINE */}
+                <p className="text-xs text-gray-500 line-clamp-2 mb-6 h-8">
+                  {project.description || ""}
+                </p>
 
-                {/* Score Bar Indicator */}
                 {project.globalScore !== null && project.globalScore !== undefined && (
                   <div className="mt-auto w-full h-1 bg-white/5 rounded-full overflow-hidden">
                     <div 
@@ -154,8 +160,15 @@ export default function ProjectLibrary() {
             <form onSubmit={handleCreateProject}>
               <input 
                 autoFocus type="text" value={newProjectName} onChange={(e) => setNewProjectName(e.target.value)}
-                className="w-full bg-[#1a1d23] border border-gray-700 rounded-xl px-4 py-3 text-white mb-6"
+                className="w-full bg-[#1a1d23] border border-gray-700 rounded-xl px-4 py-3 text-white mb-4"
                 placeholder="Project Name"
+              />
+              {/* NEW DESCRIPTION INPUT IN MODAL */}
+              <textarea 
+                value={newProjectDescription} onChange={(e) => setNewProjectDescription(e.target.value)}
+                className="w-full bg-[#1a1d23] border border-gray-700 rounded-xl px-4 py-3 text-white text-sm mb-6 resize-none"
+                placeholder="Description (Optional)"
+                rows={3}
               />
               <div className="flex gap-3">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 text-gray-400 font-bold uppercase text-[10px]">Cancel</button>

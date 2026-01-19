@@ -10,6 +10,8 @@ export default function ProjectDetail({ params }) {
   const [results, setResults] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState("");
+  // NEW DESCRIPTION STATE
+  const [editDescription, setEditDescription] = useState("");
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
 
@@ -70,8 +72,14 @@ export default function ProjectDetail({ params }) {
           api.get(`/projects/${id}`),
           api.get(`/sentiment-analysis_results/${id}`),
         ]);
+        
+        // Ensure we set the project data correctly including description
         setProject(projRes.data);
         setEditName(projRes.data.name);
+        
+        // FETCH DESCRIPTION: Sync the input field with DB value
+        setEditDescription(projRes.data.description || "");
+        
         setResults(Array.isArray(resultsRes.data) ? resultsRes.data : []);
       } catch (err) {
         console.error("Fetch error:", err);
@@ -84,10 +92,19 @@ export default function ProjectDetail({ params }) {
 
   const handleUpdate = async () => {
     try {
-      const res = await api.put(`/projects/${id}`, { name: editName });
-      setProject(res.data);
+      // Send the update to the backend
+      const res = await api.put(`/projects/${id}`, { 
+        name: editName, 
+        description: editDescription 
+      });
+      
+      // SYNC FRONTEND: Update the local project state with the new DB record
+      setProject(res.data); 
+      
+      // Close the edit mode
       setIsEditing(false);
     } catch (err) {
+      console.error("Update failed:", err);
       alert("Update failed.");
     }
   };
@@ -120,6 +137,14 @@ export default function ProjectDetail({ params }) {
                   onChange={(e) => setEditName(e.target.value)}
                   className="w-full bg-[#1a1d23] border border-gray-700 rounded-xl px-4 py-3 text-center text-xl font-bold text-white focus:ring-2 focus:ring-white/50 outline-none"
                 />
+                {/* Edit Description Input */}
+                <textarea
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  placeholder="Project description..."
+                  className="w-full bg-[#1a1d23] border border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-300 focus:ring-2 focus:ring-white/50 outline-none resize-none"
+                  rows={3}
+                />
                 <div className="flex gap-2">
                   <button onClick={handleUpdate} className="px-6 py-2 bg-white text-black font-black text-[10px] rounded-lg uppercase tracking-widest">Save</button>
                   <button onClick={() => setIsEditing(false)} className="px-6 py-2 text-gray-500 font-black text-[10px] uppercase tracking-widest">Cancel</button>
@@ -128,11 +153,17 @@ export default function ProjectDetail({ params }) {
             ) : (
               <>
                 <h1 className="text-5xl font-black tracking-tighter text-center leading-tight">{project?.name}</h1>
+                {/* Display Description */}
+                <p className="text-gray-400 text-center text-sm max-w-md leading-relaxed -mt-4">
+                  {project?.description && project.description.trim() !== "" 
+                    ? project.description 
+                    : ""}
+                </p>
                 <button onClick={() => setIsEditing(true)} className="text-[10px] font-bold text-gray-500 hover:text-white uppercase tracking-widest flex items-center gap-2 transition-colors">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                   </svg>
-                  Rename Project
+                  Edit Project Details
                 </button>
               </>
             )}
@@ -184,7 +215,7 @@ export default function ProjectDetail({ params }) {
                   <th className="px-4 py-2">Scope (From-To)</th>
                   <th className="px-4 py-2 text-center">QTY</th>
                   <th className="px-4 py-2 text-center">Score</th>
-                  <th className="px-4 py-2 text-center">P / N / N</th>
+                  <th className="px-4 py-2 text-center">Distribution</th>
                 </tr>
               </thead>
               <tbody>
