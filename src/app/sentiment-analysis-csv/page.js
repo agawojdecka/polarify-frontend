@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
+import Link from "next/link";
 
 export default function SentimentAnalysisCSV() {
   // --- 1. API Configuration ---
@@ -80,18 +81,39 @@ export default function SentimentAnalysisCSV() {
 
   return (
     <div className="min-h-screen bg-[#1a1d23] text-gray-100 p-4 md:p-12 font-sans">
-      {/* Header */}
-      <header className="max-w-6xl mx-auto flex justify-between items-center mb-12">
-        <div className="flex items-center gap-3">
-          <img src="/favicon.png" alt="Logo" className="w-10 h-10 object-contain" />
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Sentiment Analysis</h1>
+      
+      {/* HEADER SECTION - Absolute Layout Fix */}
+      <header className="max-w-6xl mx-auto relative flex justify-center items-center mb-16 min-h-[60px]">
+        
+        {/* BACK TO TERMINAL BUTTON */}
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 z-50">
+          <Link href="/dashboard" className="group flex items-center gap-3 no-underline">
+            <div className="p-2.5 rounded-xl bg-white/5 group-hover:bg-white/10 transition-all border border-white/10 shadow-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 group-hover:text-white transition-colors">
+              Terminal
+            </span>
+          </Link>
         </div>
-        <button 
-          onClick={() => {localStorage.clear(); window.location.href="/"}} 
-          className="bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 px-5 py-2 rounded-lg transition-all text-sm font-medium"
-        >
-          Logout
-        </button>
+
+        {/* LOGO & TITLE */}
+        <div className="flex items-center gap-4">
+          <img src="/favicon.png" alt="Logo" className="w-10 h-10 object-contain" />
+          <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-white">CSV Analysis</h1>
+        </div>
+
+        {/* LOGOUT BUTTON */}
+        <div className="absolute right-0 top-1/2 -translate-y-1/2">
+          <button 
+            onClick={() => {localStorage.clear(); window.location.href="/"}} 
+            className="bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 px-6 py-2.5 rounded-xl transition-all text-xs font-bold uppercase tracking-widest"
+          >
+            Logout
+          </button>
+        </div>
       </header>
 
       <main className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -114,7 +136,7 @@ export default function SentimentAnalysisCSV() {
           </div>
         </div>
 
-        {/* STEP 2: Date Selection (Separated) */}
+        {/* STEP 2: Date Selection */}
         <div className="bg-[#242931] p-6 rounded-2xl border border-gray-700/50 shadow-2xl">
           <h2 className="text-md font-semibold mb-6 flex items-center gap-2 text-white">
             <span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-[10px]">2</span>
@@ -158,7 +180,7 @@ export default function SentimentAnalysisCSV() {
           </div>
         </div>
 
-        {/* Action Button: Spans across all 3 columns */}
+        {/* Action Button */}
         <div className="lg:col-span-3 flex flex-col items-center mt-6">
             <button
               onClick={handleSubmit}

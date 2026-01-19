@@ -46,7 +46,12 @@ export default function ProjectLibrary() {
         })
       );
 
-      setProjects(enrichedProjects);
+// Sort alphabetically by name
+      const alphabeticallySorted = enrichedProjects.sort((a, b) => 
+        a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+      );
+
+      setProjects(alphabeticallySorted);
     } catch (err) {
       setError("Failed to synchronize project library.");
     } finally {
@@ -91,11 +96,15 @@ export default function ProjectLibrary() {
   return (
     <div className="min-h-screen bg-[#1a1d23] text-gray-100 p-6 md:p-12 font-sans">
       <header className="max-w-6xl mx-auto flex justify-between items-center mb-16">
-        <Link href="/dashboard" className="group flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-white/5 group-hover:bg-white/10 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+        <Link href="/dashboard" className="group flex items-center gap-3 no-underline">
+          <div className="p-2.5 rounded-xl bg-white/5 group-hover:bg-white/10 transition-all border border-white/10 shadow-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
           </div>
-          <span className="text-xs font-black uppercase tracking-widest text-gray-500 group-hover:text-white transition-colors">Terminal</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 group-hover:text-white transition-colors">
+            Terminal
+          </span>
         </Link>
         <h1 className="text-3xl font-black tracking-tighter text-white">Project Library</h1>
       </header>
