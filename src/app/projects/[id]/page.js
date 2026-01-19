@@ -10,7 +10,6 @@ export default function ProjectDetail({ params }) {
   const [results, setResults] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState("");
-  // NEW DESCRIPTION STATE
   const [editDescription, setEditDescription] = useState("");
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
@@ -35,7 +34,6 @@ export default function ProjectDetail({ params }) {
     return instance;
   }, []);
 
-  // Format date safely to avoid "Invalid Date"
   const formatDate = (dateString) => {
     if (!dateString) return "Pending...";
     const date = new Date(dateString);
@@ -47,7 +45,6 @@ export default function ProjectDetail({ params }) {
     });
   };
 
-  // Sort results by date (Newest first) and calculate global average
   const sortedResults = useMemo(() => {
     if (!Array.isArray(results)) return [];
     return [...results].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -59,7 +56,6 @@ export default function ProjectDetail({ params }) {
     return total / sortedResults.length;
   }, [sortedResults]);
 
-  // Pagination Logic
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
   const currentRecords = sortedResults.slice(indexOfFirstRecord, indexOfLastRecord);
@@ -73,13 +69,9 @@ export default function ProjectDetail({ params }) {
           api.get(`/sentiment-analysis_results/${id}`),
         ]);
         
-        // Ensure we set the project data correctly including description
         setProject(projRes.data);
         setEditName(projRes.data.name);
-        
-        // FETCH DESCRIPTION: Sync the input field with DB value
         setEditDescription(projRes.data.description || "");
-        
         setResults(Array.isArray(resultsRes.data) ? resultsRes.data : []);
       } catch (err) {
         console.error("Fetch error:", err);
@@ -92,16 +84,11 @@ export default function ProjectDetail({ params }) {
 
   const handleUpdate = async () => {
     try {
-      // Send the update to the backend
       const res = await api.put(`/projects/${id}`, { 
         name: editName, 
         description: editDescription 
       });
-      
-      // SYNC FRONTEND: Update the local project state with the new DB record
       setProject(res.data); 
-      
-      // Close the edit mode
       setIsEditing(false);
     } catch (err) {
       console.error("Update failed:", err);
@@ -120,8 +107,15 @@ export default function ProjectDetail({ params }) {
   return (
     <div className="min-h-screen bg-[#1a1d23] text-gray-100 p-6 md:p-12 font-sans">
       <header className="max-w-4xl mx-auto flex justify-between items-center mb-16">
-        <Link href="/projects" className="text-xs font-black uppercase tracking-widest text-gray-500 hover:text-white flex items-center gap-2 transition-colors">
-          ← Library
+        <Link href="/projects" className="group flex items-center gap-3 no-underline">
+          <div className="p-2.5 rounded-xl bg-white/5 group-hover:bg-white/10 transition-all border border-white/10 shadow-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+          </div>
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 group-hover:text-white transition-colors">
+            Projects Library
+          </span>
         </Link>
       </header>
 
@@ -137,7 +131,6 @@ export default function ProjectDetail({ params }) {
                   onChange={(e) => setEditName(e.target.value)}
                   className="w-full bg-[#1a1d23] border border-gray-700 rounded-xl px-4 py-3 text-center text-xl font-bold text-white focus:ring-2 focus:ring-white/50 outline-none"
                 />
-                {/* Edit Description Input */}
                 <textarea
                   value={editDescription}
                   onChange={(e) => setEditDescription(e.target.value)}
@@ -153,11 +146,8 @@ export default function ProjectDetail({ params }) {
             ) : (
               <>
                 <h1 className="text-5xl font-black tracking-tighter text-center leading-tight">{project?.name}</h1>
-                {/* Display Description */}
                 <p className="text-gray-400 text-center text-sm max-w-md leading-relaxed -mt-4">
-                  {project?.description && project.description.trim() !== "" 
-                    ? project.description 
-                    : ""}
+                  {project?.description && project.description.trim() !== "" ? project.description : ""}
                 </p>
                 <button onClick={() => setIsEditing(true)} className="text-[10px] font-bold text-gray-500 hover:text-white uppercase tracking-widest flex items-center gap-2 transition-colors">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -168,12 +158,24 @@ export default function ProjectDetail({ params }) {
               </>
             )}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+
+          {/* Action Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
             <Link href={`/sentiment-analysis-raw`}>
-              <button className="w-full py-5 rounded-2xl bg-white text-black font-black text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all">Manual Analysis</button>
+              <button className="w-full py-5 rounded-2xl bg-white text-black font-black text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all">
+                Manual Analysis
+              </button>
             </Link>
             <Link href={`/sentiment-analysis-csv`}>
-              <button className="w-full py-5 rounded-2xl bg-white text-black font-black text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all">CSV Analysis</button>
+              <button className="w-full py-5 rounded-2xl bg-white text-black font-black text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all">
+                CSV Analysis
+              </button>
+            </Link>
+            {/* NEW STATISTICAL MEASURES BUTTON */}
+            <Link href={`/projects/${id}/statistical_measures`}>
+              <button className="w-full py-5 rounded-2xl bg-cyan-500 text-black font-black text-xs uppercase tracking-widest hover:bg-cyan-400 hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_20px_rgba(6,182,212,0.3)]">
+                Statistical View
+              </button>
             </Link>
           </div>
         </div>
