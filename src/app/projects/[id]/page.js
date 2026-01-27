@@ -180,9 +180,9 @@ export default function ProjectDetail({ params }) {
             <thead>
               <tr className="text-[9px] font-black uppercase text-gray-600">
                 <th className="px-4 py-2">Creation Date</th>
-                <th className="px-4 py-2">Scope</th>
+                <th className="px-4 py-2">Interval</th>
                 <th className="px-4 py-2 text-center">Score</th>
-                <th className="px-4 py-2 text-center">+/-/o</th>
+                <th className="px-4 py-2 text-center">Distribution</th>
               </tr>
             </thead>
             <tbody>
