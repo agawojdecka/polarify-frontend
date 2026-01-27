@@ -10,7 +10,6 @@ export default function ProjectLibrary() {
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
-  // NEW DESCRIPTION STATE FOR MODAL
   const [newProjectDescription, setNewProjectDescription] = useState("");
 
   const api = useMemo(() => {
@@ -35,18 +34,31 @@ export default function ProjectLibrary() {
             const res = await api.get(`/sentiment-analysis_results/${project.id}`);
             const results = res.data;
             
-            const avg = results.length > 0 
-              ? results.reduce((acc, curr) => acc + curr.avg_sentiment, 0) / results.length 
-              : null;
+            // --- WEIGHTED AVERAGE CALCULATION ---
+            let weightedScore = null;
+            if (Array.isArray(results) && results.length > 0) {
+              const totals = results.reduce(
+                (acc, curr) => {
+                  const qty = Number(curr.opinions_count) || 0;
+                  const score = Number(curr.avg_sentiment) || 0;
+                  return {
+                    weightedSum: acc.weightedSum + (score * qty),
+                    totalQty: acc.totalQty + qty
+                  };
+                },
+                { weightedSum: 0, totalQty: 0 }
+              );
+              
+              weightedScore = totals.totalQty > 0 ? totals.weightedSum / totals.totalQty : 0;
+            }
 
-            return { ...project, globalScore: avg };
+            return { ...project, globalScore: weightedScore };
           } catch (err) {
             return { ...project, globalScore: null };
           }
         })
       );
 
-// Sort alphabetically by name
       const alphabeticallySorted = enrichedProjects.sort((a, b) => 
         a.name.toLowerCase().localeCompare(b.name.toLowerCase())
       );
@@ -67,13 +79,12 @@ export default function ProjectLibrary() {
     e.preventDefault();
     if (!newProjectName.trim()) return;
     try {
-      // UPDATED TO SEND DESCRIPTION
       await api.post("/projects/", { 
         name: newProjectName,
         description: newProjectDescription 
       });
       setNewProjectName("");
-      setNewProjectDescription(""); // RESET
+      setNewProjectDescription("");
       setIsModalOpen(false);
       fetchProjects();
     } catch (err) {
@@ -126,7 +137,7 @@ export default function ProjectLibrary() {
                     {project.globalScore !== null && project.globalScore !== undefined && (
                       <div className="flex flex-col items-end">
                         <span className="text-[8px] font-black uppercase tracking-tighter text-gray-500">Global Score</span>
-                        <span className={`text-sm font-black ${project.globalScore > 0 ? 'text-green-400' : project.globalScore < 0 ? 'text-red-400' : 'text-gray-400'}`}>
+                        <span className={`text-sm font-black ${project.globalScore > 0.05 ? 'text-green-400' : project.globalScore < -0.05 ? 'text-red-400' : 'text-gray-400'}`}>
                           {Number(project.globalScore).toFixed(2)}
                         </span>
                       </div>
@@ -143,7 +154,6 @@ export default function ProjectLibrary() {
 
                 <h3 className="text-lg font-bold text-white mb-2 group-hover:text-white transition-colors">{project.name}</h3>
                 
-                {/* NEW PROJECT DESCRIPTION LINE */}
                 <p className="text-xs text-gray-500 line-clamp-2 mb-6 h-8">
                   {project.description || ""}
                 </p>
@@ -151,7 +161,7 @@ export default function ProjectLibrary() {
                 {project.globalScore !== null && project.globalScore !== undefined && (
                   <div className="mt-auto w-full h-1 bg-white/5 rounded-full overflow-hidden">
                     <div 
-                      className={`h-full transition-all duration-1000 ${project.globalScore > 0 ? 'bg-green-500' : 'bg-red-500'}`}
+                      className={`h-full transition-all duration-1000 ${project.globalScore > 0.05 ? 'bg-green-500' : project.globalScore < -0.05 ? 'bg-red-500' : 'bg-gray-500'}`}
                       style={{ width: `${Math.min(Math.abs(project.globalScore) * 100, 100)}%` }}
                     />
                   </div>
@@ -172,7 +182,6 @@ export default function ProjectLibrary() {
                 className="w-full bg-[#1a1d23] border border-gray-700 rounded-xl px-4 py-3 text-white mb-4"
                 placeholder="Project Name"
               />
-              {/* NEW DESCRIPTION INPUT IN MODAL */}
               <textarea 
                 value={newProjectDescription} onChange={(e) => setNewProjectDescription(e.target.value)}
                 className="w-full bg-[#1a1d23] border border-gray-700 rounded-xl px-4 py-3 text-white text-sm mb-6 resize-none"
