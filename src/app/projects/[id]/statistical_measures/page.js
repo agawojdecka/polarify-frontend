@@ -29,7 +29,10 @@ export default function StatisticalMeasures({ params }) {
 
   useEffect(() => {
     const fetchStats = async () => {
+      if (!id || !mounted) return;
       try {
+        setLoading(true);
+        // Ensure this endpoint matches your FastAPI @app.get route exactly
         const res = await api.get(`/sentiment-analysis_statistical_measures/${id}`);
         setStats(res.data);
       } catch (err) {
@@ -38,20 +41,12 @@ export default function StatisticalMeasures({ params }) {
         setLoading(false);
       }
     };
-    if (id && mounted) fetchStats();
+    fetchStats();
   }, [id, api, mounted]);
 
-  // SAFE DATE FORMATTING: Prevents hydration mismatch
-  const formatDate = (dateValue) => {
-    if (!dateValue) return "Initial";
-    const date = new Date(dateValue);
-    return isNaN(date.getTime()) ? dateValue : date.toLocaleDateString('pl-PL');
-  };
-
-  // HELPER: Forced number conversion to fix the "0.00" bug
   const StatCard = ({ label, value, colorClass = "text-white" }) => {
-    const numericValue = Number(value); // Converts strings like "0.55" to 0.55
-    const isValid = !isNaN(numericValue) && value !== null;
+    const numericValue = Number(value);
+    const isValid = value !== undefined && value !== null && !isNaN(numericValue);
 
     return (
       <div className="bg-white/5 border border-gray-700/30 p-8 rounded-[2rem] flex flex-col items-center justify-center gap-3 transition-all hover:bg-white/[0.07]">
@@ -63,7 +58,9 @@ export default function StatisticalMeasures({ params }) {
     );
   };
 
-  if (loading || !mounted) {
+  if (!mounted) return null;
+
+  if (loading) {
     return (
       <div className="min-h-screen bg-[#1a1d23] flex items-center justify-center text-white font-black animate-pulse uppercase tracking-widest text-xs">
         Synchronizing Neural Metrics...
@@ -73,21 +70,22 @@ export default function StatisticalMeasures({ params }) {
 
   return (
     <div className="min-h-screen bg-[#1a1d23] text-gray-100 p-6 md:p-12 font-sans">
-      <header className="max-w-5xl mx-auto flex justify-between items-center mb-16">
-        <Link 
-          href={`/projects/${id}`} 
-          className="text-xs font-black uppercase tracking-widest text-gray-500 hover:text-white flex items-center gap-2 transition-colors"
-        >
-          ← Return to Project
+      <header className="max-w-4xl mx-auto mb-12">
+        <Link href={`/projects/${id}`} className="group flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 group-hover:bg-white/10 transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+          </div>
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 group-hover:text-white">Back to project</span>
         </Link>
       </header>
 
-      <main className="max-w-5xl mx-auto space-y-8">
+      <main className="max-w-5xl mx-auto">
         <section className="bg-[#242931] p-12 rounded-[3rem] border border-gray-700/50 shadow-2xl">
           <div className="mb-12 text-center">
             <h1 className="text-5xl font-black tracking-tighter mb-4">Statistical Measures</h1>
-            <div className="flex justify-center gap-4">
-            </div>
+            <p className="text-gray-500 text-xs uppercase tracking-widest font-bold">Project ID: {id}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -96,7 +94,8 @@ export default function StatisticalMeasures({ params }) {
             <StatCard label="Std Deviation" value={stats?.std} colorClass="text-purple-400" />
             <StatCard label="Min Value" value={stats?.min} colorClass="text-red-400" />
             <StatCard label="Max Value" value={stats?.max} colorClass="text-green-400" />
-
+            {/* Added an extra card to keep the grid balanced if you wish */}
+            <StatCard label="Total Samples" value={stats?.count} colorClass="text-gray-400" />
           </div>
         </section>
       </main>
