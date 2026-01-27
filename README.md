@@ -32,6 +32,9 @@ Project Library
 Project Details
 ![project detail](screens/projects_id.png)
 
+Project Details - Statistical Measures
+![projects stats](screens/statistical_measures.png)
+
 Sentiment Analysis - page where user can perform opinion sentiment analysis based on AI, providing raw opinions manually or uploading csv file.
 ![sentiment analysis raw](screens/sentiment_raw.png)
 ![sentiment analysis csv](screens/sentiment_csv.png)
