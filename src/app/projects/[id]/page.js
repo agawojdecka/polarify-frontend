@@ -63,9 +63,23 @@ export default function ProjectDetail({ params }) {
     return filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   }, [results, filterScore]);
 
-  const globalAverage = useMemo(() => {
+const globalAverage = useMemo(() => {
     if (processedResults.length === 0) return 0;
-    return processedResults.reduce((acc, curr) => acc + (Number(curr.avg_sentiment) || 0), 0) / processedResults.length;
+
+    const totals = processedResults.reduce(
+      (acc, curr) => {
+        const quantity = Number(curr.opinions_count) || 0;
+        const score = Number(curr.avg_sentiment) || 0;
+
+        return {
+          weightedSum: acc.weightedSum + score * quantity,
+          totalQuantity: acc.totalQuantity + quantity,
+        };
+      },
+      { weightedSum: 0, totalQuantity: 0 }
+    );
+
+    return totals.totalQuantity > 0 ? totals.weightedSum / totals.totalQuantity : 0;
   }, [processedResults]);
 
   useEffect(() => {
@@ -181,6 +195,7 @@ export default function ProjectDetail({ params }) {
               <tr className="text-[9px] font-black uppercase text-gray-600">
                 <th className="px-4 py-2">Creation Date</th>
                 <th className="px-4 py-2">Interval</th>
+                <th className="px-4 py-2 text-center">Quantity</th>
                 <th className="px-4 py-2 text-center">Score</th>
                 <th className="px-4 py-2 text-center">Distribution</th>
               </tr>
@@ -190,6 +205,7 @@ export default function ProjectDetail({ params }) {
                 <tr key={r.id || Math.random()} className="bg-white/5 hover:bg-white/10 transition-colors">
                   <td className="px-4 py-4 rounded-l-xl text-xs font-bold text-gray-300">{formatDate(r.created_at)}</td>
                   <td className="px-4 py-4 text-[10px] text-gray-500 font-mono">{r.date_from} — {r.date_to}</td>
+                  <td className="px-4 py-4 text-center text-xs font-black text-white">{r.opinions_count}</td>
                   <td className={`px-4 py-4 text-center text-xs font-black ${Number(r.avg_sentiment) > 0.05 ? "text-green-400" : Number(r.avg_sentiment) < -0.05 ? "text-red-400" : "text-gray-400"}`}>{Number(r.avg_sentiment).toFixed(2)}</td>
                   <td className="px-4 py-4 rounded-r-xl text-center text-[9px] font-black space-x-2">
                     <span className="text-green-500/60">{r.positive_count}</span>
